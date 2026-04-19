@@ -29,5 +29,4 @@ type Notification struct {
 	Link		string
 	Status    	Status
 	CreatedAt 	time.Time
-	UpdatedAt 	time.Time
 }

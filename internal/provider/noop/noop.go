@@ -8,7 +8,7 @@ import (
 )
 
 // Provider discards notification. User for local dev and testing
-type Provider stuct {
+type Provider struct {
 	logger *slog.Logger
 }
 
@@ -17,7 +17,8 @@ func New(logger *slog.Logger) *Provider {
 }
 
 func (p *Provider) Send(ctx context.Context, n notification.Notification) error {
-	p.logger.Info("noop: notification sent",
+	p.logger.Info(
+		"noop: notification sent",
 		"id", n.ID,
 		"channel", n.Channel,
 		"recipient", n.Recipient,

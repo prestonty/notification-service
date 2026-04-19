@@ -13,11 +13,11 @@ func New() *Engine {
 }
 
 // Render replaces {key} placeholders in tmpl with values from data
-func (e *Engine) Render(tmpl stirng, ata map[string]string (string, error)) {
+func (e *Engine) Render(tmpl string, data map[string]string) (string, error) {
 	result := tmpl
 	for key, val := range data {
-		placeolder := "{" + key + "}"
-		result = string.ReplaceAll(result, placeholder, val)
+		placeholder := "{" + key + "}"
+		result = strings.ReplaceAll(result, placeholder, val)
 	}
 
 	// Check for unreplacd placeholders

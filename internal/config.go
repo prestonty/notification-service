@@ -29,7 +29,7 @@ func Load() *Config {
 	}
 }
 
-func getEnv(key, falback string) string {
+func getEnv(key, fallback string) string {
 	if v:= os.Getenv(key); v != "" {
 		return v
 	}
