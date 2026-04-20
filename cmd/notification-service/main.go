@@ -14,6 +14,7 @@ import (
 	"github.com/prestonty/notification-service/internal/routing"
 	"github.com/prestonty/notification-service/internal/service"
 	"github.com/prestonty/notification-service/internal/template"
+	"github.com/prestonty/notification-service/internal/middleware"
 )
 
 func main() {
@@ -43,8 +44,11 @@ func main() {
     mux.Handle("/events", eventHandler)
     mux.Handle("/notifications", notifHandler)
 
-    addr := fmt.Sprintf(":%d", cfg.Port)
-	logger.Info("server starting", "addr", addr)
-	log.Fatal(http.ListenAndServe(addr, mux))
+	var h http.Handler = mux
+	h = middleware.Logging(logger)(h)
+	h = middleware.RequestID(h)
 
+	addr := fmt.Sprintf(":%d", cfg.Port)
+	logger.Info("server starting", "addr", addr)
+	log.Fatal(http.ListenAndServe(addr, h))
 }
