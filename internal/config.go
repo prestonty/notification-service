@@ -8,29 +8,27 @@ import (
 type Config struct {
 	Port int
 
-	EmailHost string
-	EmailPort int
-	EmailUser string
-	EmailPass string
+	MailgunDomain string
+	MailgunAPIKey string
+	MailgunFrom   string
 
 	SMSApiKey string
 	SMSApiURL string
 }
 
 func Load() *Config {
-	return &Config {
-		Port: getEnvInt("PORT", 8080),
-		EmailHost: getEnv("EMAIL_HOST", ""),
-		EmailPort: getEnvInt("EMAIL_PORT", 587),
-		EmailUser: getEnv("EMAIL_USER", ""),
-		EmailPass: getEnv("EMAIL_PASS", ""),
-		SMSApiKey: getEnv("SMS_API_KEY", ""),
-		SMSApiURL: getEnv("SMS_API_URL", ""),
+	return &Config{
+		Port:          getEnvInt("PORT", 8080),
+		MailgunDomain: getEnv("MAILGUN_DOMAIN", ""),
+		MailgunAPIKey: getEnv("MAILGUN_API_KEY", ""),
+		MailgunFrom:   getEnv("MAILGUN_FROM", ""),
+		SMSApiKey:     getEnv("SMS_API_KEY", ""),
+		SMSApiURL:     getEnv("SMS_API_URL", ""),
 	}
 }
 
 func getEnv(key, fallback string) string {
-	if v:= os.Getenv(key); v != "" {
+	if v := os.Getenv(key); v != "" {
 		return v
 	}
 	return fallback
@@ -47,4 +45,3 @@ func getEnvInt(key string, fallback int) int {
 	}
 	return n
 }
-
