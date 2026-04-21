@@ -23,6 +23,10 @@ import (
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+    	logger.Info(".env not found, using shell env vars")
+	}
+	
     cfg := config.Load()
     logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
