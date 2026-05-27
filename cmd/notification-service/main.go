@@ -1,15 +1,17 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
-	"context"
-	"errors"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/joho/godotenv"
 
 	config "github.com/prestonty/notification-service/internal"
 	"github.com/prestonty/notification-service/internal/handler"
@@ -23,22 +25,23 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
-    	logger.Info(".env not found, using shell env vars")
-	}
-	
-    cfg := config.Load()
     logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+    if err := godotenv.Load(); err != nil {
+        logger.Info(".env not found, using shell env vars")
+    }
+
+    cfg := config.Load()
 
     // Providers
     noopProvider := noop.New(logger)
 
     var emailProvider notification.Sender = noopProvider
-    if cfg.MailgunDomain != "" && cfg.MailgunAPIKey != "" {
-        emailProvider = email.New(cfg.MailgunDomain, cfg.MailgunAPIKey, cfg.MailgunFrom, logger)
-        logger.Info("email provider: mailgun", "domain", cfg.MailgunDomain)
+    if cfg.ResendAPIKey != "" {
+        emailProvider = email.New(cfg.ResendAPIKey, cfg.ResendFrom, logger)
+        logger.Info("email provider: resend")
     } else {
-        logger.Info("email provider: noop (MAILGUN_DOMAIN/MAILGUN_API_KEY unset)")
+        logger.Info("email provider: noop (RESEND_API_KEY unset)")
     }
 
     providers := map[notification.Channel]notification.Sender{

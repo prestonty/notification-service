@@ -8,9 +8,8 @@ import (
 type Config struct {
 	Port int
 
-	MailgunDomain string
-	MailgunAPIKey string
-	MailgunFrom   string
+	ResendAPIKey string
+	ResendFrom   string
 
 	SMSApiKey string
 	SMSApiURL string
@@ -19,9 +18,8 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Port:          getEnvInt("PORT", 8080),
-		MailgunDomain: getEnv("MAILGUN_DOMAIN", ""),
-		MailgunAPIKey: getEnv("MAILGUN_API_KEY", ""),
-		MailgunFrom:   getEnv("MAILGUN_FROM", ""),
+		ResendAPIKey: getEnv("RESEND_API_KEY", ""),
+		ResendFrom:   getEnv("RESEND_FROM", ""),
 		SMSApiKey:     getEnv("SMS_API_KEY", ""),
 		SMSApiURL:     getEnv("SMS_API_URL", ""),
 	}

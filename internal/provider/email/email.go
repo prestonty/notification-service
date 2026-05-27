@@ -1,30 +1,35 @@
 package email
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
-	"net/url"
-	"strings"
 	"time"
 
 	"github.com/prestonty/notification-service/internal/notification"
 )
 
-// Provider sends email notifications via the Mailgun HTTP API.
+// Provider sends email notifications via the Resend HTTP API.
 type Provider struct {
-	domain string
 	apiKey string
 	from   string
 	client *http.Client
 	logger *slog.Logger
 }
 
-func New(domain, apiKey, from string, logger *slog.Logger) *Provider {
+type sendRequest struct {
+	From    string   `json:"from"`
+	To      []string `json:"to"`
+	Subject string   `json:"subject"`
+	Text    string   `json:"text"`
+}
+
+func New(apiKey, from string, logger *slog.Logger) *Provider {
 	return &Provider{
-		domain: domain,
 		apiKey: apiKey,
 		from:   from,
 		client: &http.Client{Timeout: 30 * time.Second},
@@ -33,34 +38,37 @@ func New(domain, apiKey, from string, logger *slog.Logger) *Provider {
 }
 
 func (p *Provider) Send(ctx context.Context, n notification.Notification) error {
-	endpoint := fmt.Sprintf("https://api.mailgun.net/v3/%s/messages", p.domain)
-
-	form := url.Values{}
-	form.Set("from", p.from)
-	form.Set("to", n.Recipient)
-	form.Set("subject", n.Subject)
-	form.Set("text", n.Message)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, strings.NewReader(form.Encode()))
+	body, err := json.Marshal(sendRequest{
+		From:    p.from,
+		To:      []string{n.Recipient},
+		Subject: n.Subject,
+		Text:    n.Message,
+	})
 	if err != nil {
-		return fmt.Errorf("mailgun: build request: %w", err)
+		return fmt.Errorf("resend: marshal: %w", err)
 	}
-	req.SetBasicAuth("api", p.apiKey)
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		"https://api.resend.com/emails", bytes.NewReader(body))
+	if err != nil {
+		return fmt.Errorf("resend: build request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+p.apiKey)
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := p.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("mailgun: send: %w", err)
+		return fmt.Errorf("resend: send: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("mailgun: non-2xx status %d: %s", resp.StatusCode, string(body))
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("resend: non-2xx status %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	p.logger.Info(
-		"mailgun: notification sent",
+		"resend: notification sent",
 		"id", n.ID,
 		"channel", n.Channel,
 		"recipient", n.Recipient,
